@@ -1,7 +1,6 @@
 import requests
 import webbrowser
 import sys
-import base64
 
 
 def reverseImageSearch(encodedImage):

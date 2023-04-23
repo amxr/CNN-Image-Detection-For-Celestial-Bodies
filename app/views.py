@@ -1,28 +1,29 @@
 import os
 from base64 import b64encode
+
+import keras
+import keras.utils as image
+import numpy as np
+import wikipedia
 from flask import render_template, request, redirect, url_for, send_from_directory
 from flask_uploads import UploadSet, IMAGES, configure_uploads
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, validators
-import keras
-import numpy as np
-from app.__init__ import app
-from hub.examples.image_retraining.label_image import wiki
-from hub.examples.image_retraining.reverse_image_search import reverseImageSearch
-import keras.utils as image
 from werkzeug.datastructures import FileStorage
-import wikipedia
+from wtforms import StringField, validators
 from yaml import load, SafeLoader
+
+from app.__init__ import app
+from hub.examples.image_retraining.reverse_image_search import reverseImageSearch
 
 # no secret key set yet
 SECRET_KEY = os.urandom(32)
 app.config["SECRET_KEY"] = SECRET_KEY
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
-IMAGE_RETRAINING = os.path.abspath(os.path.join(app.root_path, "..", "hub", "examples", "image_retraining"))
-MODEL = os.path.join(IMAGE_RETRAINING, "CNN_Model.h5")
-UPLOADS = os.path.join(APP_ROOT, 'uploads')
-app.config['UPLOADED_PHOTOS_DEST'] = UPLOADS
+IMAGE_RETRAINING_DIR = os.path.abspath(os.path.join(app.root_path, "..", "hub", "examples", "image_retraining"))
+MODEL = os.path.join(IMAGE_RETRAINING_DIR, "CNN_Model.h5")
+UPLOADS_DIR = os.path.join(APP_ROOT, 'uploads')
+app.config['UPLOADED_PHOTOS_DEST'] = UPLOADS_DIR
 photos = UploadSet('photos', IMAGES)
 configure_uploads(app, photos)
 
@@ -45,7 +46,7 @@ class SelectImageForm(FlaskForm):
 
 @app.route('/uploads/<filename>')
 def get_file(filename):
-    return send_from_directory(UPLOADS, filename)
+    return send_from_directory(UPLOADS_DIR, filename)
 
 
 @app.route("/upload")
@@ -62,18 +63,18 @@ def upload():
 
         # save the image to the UPLOADS_DEFAULT_DEST folder
         filename = photos.save(image_file)
-        file_url = url_for('get_file', filename=filename)
+        url_for('get_file', filename=filename)
         predict_answer()
 
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     # Get a list of all the files in the folder
-    files = os.listdir(UPLOADS)
+    files = os.listdir(UPLOADS_DIR)
     if len(files) != 0:
         # Loop through the list of files and remove each one
         for file_name in files:
-            file_path = os.path.join(UPLOADS, file_name)
+            file_path = os.path.join(UPLOADS_DIR, file_name)
             os.remove(file_path)
     # image in memory will be used on reload
     global imageBytes
@@ -95,12 +96,12 @@ def about():
 def result():
     try:
         # Get a list of all the files in the directory
-        files = os.listdir(UPLOADS)
+        files = os.listdir(UPLOADS_DIR)
 
         # Get the first file in the directory
         first_file = files[0]
         # Open the file in binary mode and read its contents
-        with open(os.path.join(UPLOADS, first_file), 'rb') as f:
+        with open(os.path.join(UPLOADS_DIR, first_file), 'rb') as f:
             image_data = f.read()
 
         # Convert the binary data to a base64 string
@@ -109,7 +110,7 @@ def result():
         return render_template("error.html", detail=str(e))
 
     celestial_object, labels = predict_answer()
-    title, properties, description = wiki(celestial_object, IMAGE_RETRAINING)
+    title, properties, description = wiki(celestial_object, IMAGE_RETRAINING_DIR)
     return render_template(
         "result.html",
         image=base64_data,
@@ -128,16 +129,16 @@ def redirect_to_google():
 
 @app.route("/predict")
 def predict_answer():
-    files = os.listdir(UPLOADS)
+    files = os.listdir(UPLOADS_DIR)
     # Get the first file in the directory
     first_file = files[0]
     if first_file:
         # Get a list of all the files in the directory
-        files = os.listdir(UPLOADS)
+        files = os.listdir(UPLOADS_DIR)
 
         # Get the first file in the directory
         first_file = files[0]
-        first_file_path = os.path.join(UPLOADS, first_file)
+        first_file_path = os.path.join(UPLOADS_DIR, first_file)
 
         img_width = 256
         img_height = 256

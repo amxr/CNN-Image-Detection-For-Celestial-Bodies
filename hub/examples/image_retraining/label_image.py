@@ -4,6 +4,7 @@ import os
 import wikipedia
 from yaml import load, SafeLoader
 
+
 # returns celestial_object and labels_and_scores
 def get_labels(image_data, cwd):
     # Loads label file, strips off carriage return
@@ -22,17 +23,18 @@ def get_labels(image_data, cwd):
         softmax_tensor = sess.graph.get_tensor_by_name("final_result:0")
         predictions = sess.run(softmax_tensor, {"DecodeJpeg/contents:0": image_data})
         # Sort to show labels of first prediction in order of confidence
-        top_k = predictions[0].argsort()[-len(predictions[0]) :][::-1]
+        top_k = predictions[0].argsort()[-len(predictions[0]):][::-1]
         labels_and_scores = [
             (label_lines[node_id], predictions[0][node_id]) for node_id in top_k
         ]
-        
+
     # Get the predicted celestial object after classification
     celestial_object = label_lines[top_k[0]]
     return celestial_object, labels_and_scores
 
+
 # return title, statistics and summary
-def wiki(celestial_object,cwd):
+def wiki(celestial_object, cwd):
     ans = celestial_object
     with open(os.path.join(cwd, "display_info.yml"), "r") as stream:
         all_display_statistics = load(stream, Loader=SafeLoader)
@@ -61,7 +63,7 @@ def wiki(celestial_object,cwd):
         statistics = req_statistics.items()
         summary = (wikipedia.WikipediaPage(title="{}".format(ans)).summary)
         title = ("Classified Celestial Object is the {} : ".format(ans.capitalize()))
-    return title,statistics,summary
+    return title, statistics, summary
 
 
 if __name__ == "__main__":
@@ -83,11 +85,11 @@ if __name__ == "__main__":
 
     # Summary
     # Popen(["python", "wiki.py"])
-    title,statistics,summary = wiki(celestial_object,os.getcwd())
+    title, statistics, summary = wiki(celestial_object, os.getcwd())
     print("--------------------------------------------------------")
     print(title)
     print("-------------------------------------------------------- \n")
-    if(statistics):
+    if (statistics):
         statistics = "\n".join(
             [
                 "-- {}: {}".format(parameter, value)
