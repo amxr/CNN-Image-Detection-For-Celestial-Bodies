@@ -3,6 +3,7 @@ import webbrowser
 import sys
 import base64
 
+
 def reverseImageSearch(encodedImage):
     searchUrl = 'http://www.google.hr/searchbyimage/upload'
     multipart = {'encoded_image': encodedImage, 'image_content': ''}
@@ -10,7 +11,8 @@ def reverseImageSearch(encodedImage):
     fetchUrl = response.headers['Location']
     return fetchUrl
 
+
 if __name__ == "__main__":
     filePath = sys.argv[1]
-    fetchUrl=reverseImageSearch((filePath, open(filePath, 'rb')))
+    fetchUrl = reverseImageSearch((filePath, open(filePath, 'rb')))
     webbrowser.open(fetchUrl)
